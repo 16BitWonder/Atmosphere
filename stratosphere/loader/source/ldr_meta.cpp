@@ -111,10 +111,10 @@ namespace ams::ldr {
 
         Result ValidateAcidSignature(Meta *meta) {
             /* Loader did not check signatures prior to 10.0.0. */
-            if (hos::GetVersion() < hos::Version_10_0_0) {
+            /* if (hos::GetVersion() < hos::Version_10_0_0) { */
                 meta->is_signed = false;
                 return ResultSuccess();
-            }
+            /* } */
 
             /* Verify the signature. */
             const u8 *sig         = meta->acid->signature;
