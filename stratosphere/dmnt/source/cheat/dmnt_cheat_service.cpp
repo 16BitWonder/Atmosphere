@@ -39,6 +39,14 @@ namespace ams::dmnt::cheat {
         return ResultSuccess();
     }
 
+    Result CheatService::PauseCheatProcess() {
+        return dmnt::cheat::impl::PauseCheatProcess();
+    }
+
+    Result CheatService::ResumeCheatProcess() {
+        return dmnt::cheat::impl::ResumeCheatProcess();
+    }
+
     /* ========================================================================================= */
     /* ===================================  Memory Commands  =================================== */
     /* ========================================================================================= */
@@ -93,6 +101,18 @@ namespace ams::dmnt::cheat {
 
     Result CheatService::RemoveCheat(u32 cheat_id) {
         return dmnt::cheat::impl::RemoveCheat(cheat_id);
+    }
+
+    Result CheatService::ReadStaticRegister(sf::Out<u64> out, u8 which) {
+        return dmnt::cheat::impl::ReadStaticRegister(out.GetPointer(), which);
+    }
+
+    Result CheatService::WriteStaticRegister(u8 which, u64 value) {
+        return dmnt::cheat::impl::WriteStaticRegister(which, value);
+    }
+
+    Result CheatService::ResetStaticRegisters() {
+        return dmnt::cheat::impl::ResetStaticRegisters();
     }
 
     /* ========================================================================================= */

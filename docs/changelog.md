@@ -1,4 +1,52 @@
 # Changelog
+## 0.12.0
++ Configuration for exosphere was moved to sd:/exosphere.ini.
+  + This is to facilitate BIS protection changes described below.
+  + Hopefully having this outside of the Atmosphere folder will prevent accidental deletion, since this now contains important settings.
++ Atmosphere's bis protection policy for the PRODINFO partition was substantially reworked.
+  + Support was added for "automatically" performing a "blanking" operation to PRODINFO without actually modifying NAND.
+    + This is equivalent to using the "incognito" homebrew tool, but NAND is never actually modified.
+    + This can be turned on in sysmmc by setting `blank_prodinfo_sysmmc=1` in exosphere.ini, and in emummc by setting `blank_prodinfo_emummc=1` in exosphere.ini.
+    + **Please note**: This is not known to be safe. There is a lack of research on whether the information blanked out is cached elsewhere in the system.
+      + Usage of this option is not encouraged for this reason.
+  + Support was added for writing to the PRODINFO partition, if a verified encrypted backup has been made.
+    + PRODINFO is the only system data that cannot be recovered if not backed up, and thus Atmosphere has backed it up to the SD card on boot for some time now.
+    + Users who wish to modify their calibration data may now do so unconditionally in emummc, and in sysmmc if `allow_writing_to_cal_sysmmc=1` is set in exosphere.ini.
+      + **Please note**: This is heavily discouraged, and the typical user will almost never want to do this.
+      + Setting this option will cause Atmosphere to attempt to verify (or create) an encrypted backup of the PRODINFO data to an unused region in the partition.
+        + The backup is encrypted with per-console keys that Atmosphere's developers do not know.
+      + If the backup is not verified or created, writes will not work. Users who have corrupted their PRODINFO in the past are encouraged to flash a good backup to allow use of this setting.
+      + Reads and writes to the region used for the securely encrypted backup will appear to succeed, but will actually read/write from a buffer filled with garbage in memory.
+  + Support will be investigated in the future for supporting booting with fully blanked calibration.
+    + This is desirable to allow boot to succeed for users who lost their calibration data due to bricking homebrew before bis protection was implemented.
++ `creport` has been updated to use the new screenshot APIs added in 9.0.0+.
+  + On 10.0.0+, if a crash occurs in an application (not applet or sysmodule) a screenshot will now be automatically saved to the SD card.
+  + If the user applies a patch to vi on 9.0.0 (as the command this uses was previously for dev-units only), this can also work on 9.0.0.
++ The new sysmodule `pgl` added in 10.0.0 was reimplemented.
+  + `pgl` ("Program Launcher", probably) is responsible for managing launched user-processes, previously this was handled by NS.
+  + The most exciting thing about pgl is that it finally provides an API for multiple clients to subscribe to process events.
+  + Using these new APIs, system modules / other homebrew can subscribe to be notified whenever a process event occurs.
+    + This means action can be taken on process launch, process exit, process crash, etc.
+  + A slight concern with Nintendo's implementation is that each subscriber object uses 0x448 bytes of memory, and N only reserves 8KB for all allocations in pgl.
+  + Atmosphere's implementation uses a 32KB heap, which should not be exhaustible.
+  + Atmosphere's implementation has a total memory footprint roughly 0x28000 bytes smaller than Nintendo's.
++ A reimplementation was added for the `jpegdec` system module (thanks @HookedBehemoth)!
+  + This allows two sessions instead of 1, so homebrew can now use it for software jpeg decoding in addition to the OS itself.
+  + As usual the implementation has a very slightly smaller memory footprint than Nintendo's.
++ `dmnt`'s Cheat VM was extended to add three new opcodes.
+  + The first new opcode, "ReadWriteStaticRegister", allows for cheats to read from a bank of 128 read-only static registers, and write to a bank of 128 write-only static registers.
+    + This can be used in concert with new IPC commands that allow a cheat manager to read or write the value of these static registers to have "dynamic" cheats.
+      + As an example, a cheat manager could write a value to a static register that a cheat to control how many of an item to give in a game.
+      + As another example, a cheat manager could read a static register that a cheat writes to to learn how many items a player has.
++ The second and third opcodes are a pair, "PauseProcess" and "ResumeProcess".
+  + Executing pause process in a cheat will pause the game (it will be frozen) until a resume process opcode is used.
+    + These are also available over IPC, for cheat managers or system modules that want to pause or resume the attached cheat process.
+  + This allows a cheat to know that the game won't modify or access data the cheat is accessing.
+    + For example, this can be used to prevent Pokemon from seeing a pokemon a cheat is in the middle of injecting and turning it into a bad egg.
++ A bug was fixed that would cause the console to crash when connected to Wi-Fi on versions between 3.0.0 and 4.1.0 inclusive.
++ A bug was fixed that could cause boot to fail sporadically due to cache/tlb mismanagement when doing physical ASLR of the kernel.
++ A number of other minor issues were addressed (and more of Atmosphere was updated to reflect other changes in 10.0.x).
++ General system stability improvements to enhance the user's experience.
 ## 0.11.1
 + A bug was fixed that could cause owls to flicker under certain circumstances.
   + For those interested in technical details, in 10.0.0 kernelldr/kernel no longer set cpuactlr_el1, assuming that it was set correctly by the secure monitor.
